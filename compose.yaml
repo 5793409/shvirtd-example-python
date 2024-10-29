@@ -1,0 +1,59 @@
+version: "3.8"
+
+include:
+  - proxy.yaml
+
+# =============================================================================
+# docker container create
+# =============================================================================
+services:
+  db:
+    image: "mysql:8"
+    env_file:
+      - path: ./.env
+    hostname: "db"
+    container_name: "db"
+    restart: always
+    networks:
+      backend:
+        ipv4_address: 172.20.0.10
+
+
+# -----------------------------------------------------------------------------
+  web:
+# -----------------------------------------------------------------------------
+    container_name: "web"
+    build:
+      context: "."
+      dockerfile: "Dockerfile.python"
+
+    image: "my/app1"
+    environment:
+      DB_HOST: db
+      DB_USER: ${MYSQL_USER}
+      DB_PASSWORD: ${MYSQL_PASSWORD}
+      DB_NAME: ${MYSQL_DATABASE}
+
+
+    hostname: "web"
+    stdin_open: true
+    tty: true   
+    
+    restart: always
+    networks:
+      backend:
+        ipv4_address: 172.20.0.5
+        # ipv6_address: 2001:3984:3989::2
+      # default:
+    depends_on:
+      - db
+    # ports:
+    # - "127.0.0.1:5000:5000"
+
+# networks:
+#   backend:
+#     driver: bridge
+#     name: backend
+#     ipam:
+#      config:
+#        - subnet: 172.20.0.0/24
